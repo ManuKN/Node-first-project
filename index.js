@@ -34,21 +34,60 @@ const url = require("url");
 
 ///////////////////
 ///Server
+const replaceTemplate = (temp, product) => {
+  let output = temp.replace(/{%PRODUCTNAME%}/, product.productName);
+  output = output.replace(/{%IMAGE%}/, product.image);
+  output = output.replace(/{%PRICE%}/, product.price);
+  output = output.replace(/{%FROM%}/, product.from);
+  output = output.replace(/{%NUTRIENTS%}/, product.nutrients);
+  output = output.replace(/{%QUANTITY%}/, product.quantity);
+  output = output.replace(/{%ID%}/, product.id);
+  if (!product.organic)
+    output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
+  output = output.replace(/{%DESCRIPTION%}/, product.description);
+  return output;
+};
 
 ///Reading the file Synchronously to avoid lot of APi call by doing this way  we already getting the data and storeing i a variable and we can just use how many times we want😁
+
+const tempOverview = fs.readFileSync(
+  `${__dirname}/templates/template-overview.html`,
+  "utf8"
+);
+const tempCards = fs.readFileSync(
+  `${__dirname}/templates/template-cards.html`,
+  "utf8"
+);
+const tempProduct = fs.readFileSync(
+  `${__dirname}/templates/template-product.html`,
+  "utf8"
+);
+
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
 const dataObj = JSON.parse(data);
 
 const server = http.createServer((req, res) => {
-  const pathName = req.url;
-
-  if (pathName === "/" || pathName === "/overview") {
-    res.end("Hello from the Overview!");
-  } else if (pathName === "/product") {
-    res.end("This is the Product!");
-  } else if (pathName === "/api") {
-    res.writeHead(200, { "Content-Type": "application/json"});
-    res.end(data)
+  console.log(req.url);
+  const { query, pathname } = url.parse(req.url, true);
+  //Overview Page
+  if (pathname === "/" || pathname === "/overview") {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    const cardsHtml = dataObj
+      .map((el) => replaceTemplate(tempCards, el))
+      .join("");
+    const output = tempOverview.replace(/{%PRODUCT_CARDS%}/, cardsHtml);
+    res.end(output);
+  }
+  //Product Page
+  else if (pathname === "/product") {
+    const product = dataObj[query.id];
+    const output = replaceTemplate(tempProduct, product);
+    res.end(output);
+  }
+  //API Page
+  else if (pathname === "/api") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(data);
   } else {
     res.writeHead(404, {
       "Content-type": "text/html",
