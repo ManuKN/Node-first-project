@@ -1,3 +1,4 @@
+const { error } = require("console");
 const fs = require("fs");
 const http = require("http");
 const url = require("url");
@@ -33,6 +34,11 @@ const url = require("url");
 
 ///////////////////
 ///Server
+
+///Reading the file Synchronously to avoid lot of APi call by doing this way  we already getting the data and storeing i a variable and we can just use how many times we want😁
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
+const dataObj = JSON.parse(data);
+
 const server = http.createServer((req, res) => {
   const pathName = req.url;
 
@@ -40,12 +46,15 @@ const server = http.createServer((req, res) => {
     res.end("Hello from the Overview!");
   } else if (pathName === "/product") {
     res.end("This is the Product!");
+  } else if (pathName === "/api") {
+    res.writeHead(200, { "Content-Type": "application/json"});
+    res.end(data)
   } else {
     res.writeHead(404, {
       "Content-type": "text/html",
       "my-own-header": "Hello Node Server",
     });
-    res.end('<h1>Page not Found</h1>');
+    res.end("<h1>Page not Found</h1>");
   }
 });
 
