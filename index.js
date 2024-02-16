@@ -2,6 +2,8 @@ const { error } = require("console");
 const fs = require("fs");
 const http = require("http");
 const url = require("url");
+const slugify = require("slugify");
+const replaceTemplate = require('./module/replaceTemplate')
 ////////////////////////
 //Files
 
@@ -34,19 +36,7 @@ const url = require("url");
 
 ///////////////////
 ///Server
-const replaceTemplate = (temp, product) => {
-  let output = temp.replace(/{%PRODUCTNAME%}/, product.productName);
-  output = output.replace(/{%IMAGE%}/, product.image);
-  output = output.replace(/{%PRICE%}/, product.price);
-  output = output.replace(/{%FROM%}/, product.from);
-  output = output.replace(/{%NUTRIENTS%}/, product.nutrients);
-  output = output.replace(/{%QUANTITY%}/, product.quantity);
-  output = output.replace(/{%ID%}/, product.id);
-  if (!product.organic)
-    output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
-  output = output.replace(/{%DESCRIPTION%}/, product.description);
-  return output;
-};
+
 
 ///Reading the file Synchronously to avoid lot of APi call by doing this way  we already getting the data and storeing i a variable and we can just use how many times we want😁
 
@@ -65,6 +55,8 @@ const tempProduct = fs.readFileSync(
 
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
 const dataObj = JSON.parse(data);
+const slugs = dataObj.map(el => slugify(el.productName , {lower:true}))
+console.log(slugs)
 
 const server = http.createServer((req, res) => {
   console.log(req.url);
